@@ -1,18 +1,18 @@
 # -------- 1. Build stage --------
 FROM node:24-alpine AS build
 
-WORKDIR /app
+WORKDIR /app/frontend
 
 # Инструменты, нужные для node-gyp (ТОЛЬКО на этапе сборки)
 RUN apk add --no-cache python3 make g++
 
 # Устанавливаем зависимости
-COPY package*.json ./
+COPY frontend/package*.json ./
 RUN npm ci
 
 # Копируем код и собираем фронт
-COPY . .
-RUN npm run build
+COPY frontend/ ./
+RUN rm -f node_modules/.bin/node && npm run build
 
 
 # -------- 2. Runtime stage --------
@@ -20,7 +20,7 @@ FROM nginx:alpine
 
 
 # Копируем собранный фронт в nginx
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/frontend/dist /usr/share/nginx/html
 
 # Открываем порт
 EXPOSE 80
